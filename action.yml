@@ -134,7 +134,11 @@ runs:
         echo '
         [biglinux-stable]
         SigLevel = PackageRequired
-        Server = https://repo.biglinux.com.br/stable/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
+        Server = https://repo.biglinux.com.br/stable/$arch
+        
+        [biglinux-testing]
+        SigLevel = PackageRequired
+        Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
         sudo sed -i '/-Syy/s/-Syy/-Syy git /' /usr/lib/manjaro-chrootbuild/util-chroot.sh
         
     # Tmate ##

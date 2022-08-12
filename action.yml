@@ -140,6 +140,14 @@ runs:
         SigLevel = PackageRequired
         Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
         sudo sed -i '/-Syy/s/-Syy/-Syy git /' /usr/lib/manjaro-chrootbuild/util-chroot.sh
+        echo 'Server = https://manjaro.repo.cure.edu.uy/stable/$repo/$arch
+        Server = http://mirror.datacenter.by/pub/mirrors/manjaro/stable/$repo/$arch
+        Server = https://forksystems.mm.fcix.net/manjaro/stable/$repo/$arch
+        Server = http://mirror.fcix.net/manjaro/stable/$repo/$arch
+        Server = https://manjaro.ipacct.com/manjaro/stable/$repo/$arch
+        Server = https://mirrors.gethosted.online/manjaro/repos/stable/$repo/$arch
+        Server = https://ftp.caliu.cat/pub/distribucions/manjaro/stable/$repo/$arch
+        Server = https://mirrors.tuna.tsinghua.edu.cn/manjaro/stable/$repo/$arch' | sudo tee -a /etc/pacman.d/mirrorlist
         
     # Tmate ##
     - name: Setup tmate session

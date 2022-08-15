@@ -136,27 +136,24 @@ runs:
         SigLevel = PackageRequired
         Server = https://repo.biglinux.com.br/stable/$arch
         
-        [biglinux-testing]
-        SigLevel = PackageRequired
-        Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
-        sudo sed -i '/-Syy/s/-Syy/-Syy git /' /usr/lib/manjaro-chrootbuild/util-chroot.sh
-        echo 'Server = https://manjaro.repo.cure.edu.uy/stable/$repo/$arch
-        Server = http://mirror.datacenter.by/pub/mirrors/manjaro/stable/$repo/$arch
-        Server = https://forksystems.mm.fcix.net/manjaro/stable/$repo/$arch
-        Server = http://mirror.fcix.net/manjaro/stable/$repo/$arch
-        Server = https://manjaro.ipacct.com/manjaro/stable/$repo/$arch
-        Server = https://mirrors.gethosted.online/manjaro/repos/stable/$repo/$arch
-        Server = https://ftp.caliu.cat/pub/distribucions/manjaro/stable/$repo/$arch
-        Server = https://mirrors.tuna.tsinghua.edu.cn/manjaro/stable/$repo/$arch' | sudo tee -a /etc/pacman.d/mirrorlist
+        #[biglinux-testing]
+        #SigLevel = PackageRequired
+        #Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
+        #sudo sed -i '/-Syy/s/-Syy/-Syy git /' /usr/lib/manjaro-chrootbuild/util-chroot.sh
+        #echo 'Server = https://manjaro.repo.cure.edu.uy/stable/$repo/$arch
+        #Server = http://mirror.datacenter.by/pub/mirrors/manjaro/stable/$repo/$arch
+        #Server = https://forksystems.mm.fcix.net/manjaro/stable/$repo/$arch
+        #Server = http://mirror.fcix.net/manjaro/stable/$repo/$arch
+        #Server = https://manjaro.ipacct.com/manjaro/stable/$repo/$arch
+        #Server = https://mirrors.gethosted.online/manjaro/repos/stable/$repo/$arch
+        #Server = https://ftp.caliu.cat/pub/distribucions/manjaro/stable/$repo/$arch
+        #Server = https://mirrors.tuna.tsinghua.edu.cn/manjaro/stable/$repo/$arch' | sudo tee -a /etc/pacman.d/mirrorlist
         
-    # Tmate ##
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
         
-    #- name: build package
-      #shell: bash -O extglob {0}
-      #run: |
-        #git clone ${{ github.event.client_payload.url }}.git
+    - name: build package
+      shell: bash -O extglob {0}
+      run: |
+        git clone ${{ github.event.client_payload.url }}.git
         #gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
         #cd $gitfolder
 
@@ -170,6 +167,10 @@ runs:
         #for i in *.zst *.sig *.tar; do
         #test -e $i && if [ -n "$(ls $i | grep :)" ]; then mv $i $(echo $i | sed 's/:/./'); fi; done
         #exit 0
+        
+    # Tmate ##
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
         
     #- name: sign package
       #shell: bash -O extglob {0}

@@ -153,7 +153,7 @@ runs:
     - name: build package
       shell: bash -O extglob {0}
       run: |
-        git clone ${{ github.event.client_payload.url }}.git
+        #git clone ${{ github.event.client_payload.url }}.git
         #gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
         #cd $gitfolder
 

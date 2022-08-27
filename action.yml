@@ -134,12 +134,15 @@ runs:
         echo '
         [biglinux-stable]
         SigLevel = PackageRequired
-        Server = https://repo.biglinux.com.br/stable/$arch
+        Server = https://repo.biglinux.com.br/stable/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
         
+        #echo '
         #[biglinux-testing]
         #SigLevel = PackageRequired
         #Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
-        #sudo sed -i '/-Syy/s/-Syy/-Syy git /' /usr/lib/manjaro-chrootbuild/util-chroot.sh
+        
+        sudo sed -i '/-Syy/s/-Syy/-Syy git /' /usr/lib/manjaro-chrootbuild/util-chroot.sh
+        
         #echo 'Server = https://manjaro.repo.cure.edu.uy/stable/$repo/$arch
         #Server = http://mirror.datacenter.by/pub/mirrors/manjaro/stable/$repo/$arch
         #Server = https://forksystems.mm.fcix.net/manjaro/stable/$repo/$arch

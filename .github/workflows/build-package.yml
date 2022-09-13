@@ -36,6 +36,7 @@ jobs:
           branch: stable
           gpg-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.PASSPHRASE }}
+          chat_id: ${{ secrets.CHAT_ID }}
           
       ## Tmate ##
       #- name: Setup tmate session

@@ -31,7 +31,10 @@ inputs:
   ssh-key:
     description: 'boxit user ssh private key'
     required: false
-
+  chat_id:
+    description: 'id to send telegram message'
+    required: true
+    
 runs:
   using: "composite"
   steps:
@@ -173,8 +176,10 @@ runs:
         
     - name: Telegram Alert End
       shell: bash
+      env:
+        CHAT_ID: ${{ inputs.chat_id }}
       run: |
-          curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "${{ secrets.CHAT_ID }}", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID", "disable_notification": false}' ${{ secrets.MESSAGE_BOT_KEY }}
+          curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "$CHAT_ID", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID", "disable_notification": false}' ${{ secrets.MESSAGE_BOT_KEY }}
         
     # Tmate ##
     - name: Setup tmate session

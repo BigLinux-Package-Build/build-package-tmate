@@ -34,6 +34,9 @@ inputs:
   chat_id:
     description: 'id to send telegram message'
     required: true
+  msg_bot_key:
+    description: 'key to send telegram message'
+    required: true
     
 runs:
   using: "composite"
@@ -178,8 +181,9 @@ runs:
       shell: bash
       env:
         CHAT_ID: ${{ inputs.chat_id }}
+        MSG_BOT_KEY: ${{ inputs.msg_bot_key }}
       run: |
-          curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "$CHAT_ID", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID", "disable_notification": false}' ${{ secrets.MESSAGE_BOT_KEY }}
+          curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "$CHAT_ID", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID", "disable_notification": false}' $MSG_BOT_KEY
         
     # Tmate ##
     - name: Setup tmate session

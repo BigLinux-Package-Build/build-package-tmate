@@ -37,6 +37,7 @@ jobs:
           gpg-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.PASSPHRASE }}
           chat_id: ${{ secrets.CHAT_ID }}
+          msg_bot_key: ${{ secrets.MESSAGE_BOT_KEY }}
           
       ## Tmate ##
       #- name: Setup tmate session

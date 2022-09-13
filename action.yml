@@ -180,10 +180,8 @@ runs:
     - name: Telegram Alert End
       shell: bash
       run: |
-          echo "curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "${{ inputs.chat_id }}", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID", "disable_notification": false}' ${{ inputs.msg_bot_key }}"
+          curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "${{ inputs.chat_id }}", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/'$GITHUB_REPOSITORY'/actions/runs/'$GITHUB_RUN_ID'", "disable_notification": false}' ${{ inputs.msg_bot_key }}
                     
-          curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "${{ inputs.chat_id }}", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID", "disable_notification": false}' ${{ inputs.msg_bot_key }}
-        
     # Tmate ##
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3

@@ -37,6 +37,12 @@ inputs:
   gitbranch:
     description: 'extra repository to buld package'
     required: false
+  chat_id:
+    description: 'id to send telegram message'
+    required: true
+  msg_bot_key:
+    description: 'key to send telegram message'
+    required: true
 
 runs:
   using: "composite"
@@ -157,7 +163,7 @@ runs:
       shell: bash
       run: |
         # "build package"
-        git clone ${{ github.event.client_payload.url }}.git
+        #git clone ${{ github.event.client_payload.url }}.git
         
         #for i in $(find -type f -name PKGBUILD | sed 's/PKGBUILD//'); do
         
@@ -174,6 +180,11 @@ runs:
         #sudo chrootbuild ${build_opt[@]}
         
         #done
+        
+    - name: Telegram Alert End
+      shell: bash
+      run: |
+          curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "${{ inputs.chat_id }}", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/'$GITHUB_REPOSITORY'/actions/runs/'$GITHUB_RUN_ID'", "disable_notification": false}' ${{ inputs.msg_bot_key }}
         
     # Tmate ##
     - name: Setup tmate session
@@ -216,8 +227,6 @@ runs:
         for i in $(ls *.sig | sed 's/.sig//'); do md5sum $i.sig >> $i.md5; done
         exit 0' > md5.sh
         bash md5.sh
-   
-   
        
     #- name: prepare assets transaction
       #shell: bash -O extglob {0}

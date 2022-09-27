@@ -31,13 +31,13 @@ inputs:
   ssh-key:
     description: 'boxit user ssh private key'
     required: false
-  chat_id:
-    description: 'id to send telegram message'
-    required: true
-  msg_bot_key:
-    description: 'key to send telegram message'
-    required: true
-    
+  extrarepo:
+    description: 'extra repository to buld package'
+    required: false
+  gitbranch:
+    description: 'extra repository to buld package'
+    required: false
+
 runs:
   using: "composite"
   steps:
@@ -124,11 +124,13 @@ runs:
         
     - name: install manjaro-chrootbuild
       shell: bash
+      env:
+        EXTRAREPO: ${{ inputs.extrarepo }}
       run: |
         sudo git clone --depth 1 https://gitlab.manjaro.org/tools/development-tools/manjaro-chrootbuild
         pushd manjaro-chrootbuild
         sudo ./install.sh
-        echo 'PACKAGER="Bruno Goncalves <bigbruno@gmail.com>"' | sudo tee -a /etc/makepkg.conf > /dev/null
+        echo 'PACKAGER="BigLinux Package Build <bigbruno@gmail.com>"' | sudo tee -a /etc/makepkg.conf > /dev/null
         popd
         sudo rm -rf manjaro-chrootbuild
         
@@ -142,29 +144,28 @@ runs:
         SigLevel = PackageRequired
         Server = https://repo.biglinux.com.br/stable/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
         
-        #echo '
-        #[biglinux-testing]
-        #SigLevel = PackageRequired
-        #Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
+        if [ "$EXTRAREPO" = "testing" ]; then
+        echo '
+        [biglinux-testing]
+        SigLevel = PackageRequired
+        Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
+        fi
         
         sudo sed -i '/-Syy/s/-Syy/-Syy git /' /usr/lib/manjaro-chrootbuild/util-chroot.sh
         
-        #echo 'Server = https://manjaro.repo.cure.edu.uy/stable/$repo/$arch
-        #Server = http://mirror.datacenter.by/pub/mirrors/manjaro/stable/$repo/$arch
-        #Server = https://forksystems.mm.fcix.net/manjaro/stable/$repo/$arch
-        #Server = http://mirror.fcix.net/manjaro/stable/$repo/$arch
-        #Server = https://manjaro.ipacct.com/manjaro/stable/$repo/$arch
-        #Server = https://mirrors.gethosted.online/manjaro/repos/stable/$repo/$arch
-        #Server = https://ftp.caliu.cat/pub/distribucions/manjaro/stable/$repo/$arch
-        #Server = https://mirrors.tuna.tsinghua.edu.cn/manjaro/stable/$repo/$arch' | sudo tee -a /etc/pacman.d/mirrorlist
-        
-        
     - name: build package
-      shell: bash -O extglob {0}
+      shell: bash
       run: |
-        #git clone ${{ github.event.client_payload.url }}.git
-        #gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
-        #cd $gitfolder
+        # "build package"
+        git clone ${{ github.event.client_payload.url }}.git
+        
+        #for i in $(find -type f -name PKGBUILD | sed 's/PKGBUILD//'); do
+        
+        #cd $i
+        #if [ -n "$(echo ${{ github.event.client_payload.url }} | grep https://github.com/biglinux/)" ]; then
+        #git checkout ${{ inputs.gitbranch }}
+        #sed -i 's/\.git"/\.git#branch=${{ inputs.gitbranch }}"/' PKGBUILD
+        #fi
 
         #build_opt=("-H" "-p ." "-b ${{ inputs.branch }}")
         #[[ ! -z "${{ inputs.custom-repo }}" ]] && build_opt+=("-k ${{ inputs.custom-repo }}")
@@ -172,48 +173,49 @@ runs:
         #echo "cmd=chrootbuild ${build_opt[@]}"
         #sudo chrootbuild ${build_opt[@]}
         
-        #echo "Trocar : por ."
-        #for i in *.zst *.sig *.tar; do
-        #test -e $i && if [ -n "$(ls $i | grep :)" ]; then mv $i $(echo $i | sed 's/:/./'); fi; done
-        #exit 0
+        #done
         
-    - name: Telegram Alert End
-      shell: bash
-      run: |
-          curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "${{ inputs.chat_id }}", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/'$GITHUB_REPOSITORY'/actions/runs/'$GITHUB_RUN_ID'", "disable_notification": false}' ${{ inputs.msg_bot_key }}
-                    
     # Tmate ##
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
         
-    #- name: sign package
-      #shell: bash -O extglob {0}
-      #run: |
-        #echo "Assinar Pacote"
-        #cat <(echo -e "${{ inputs.gpg-key }}") | gpg --batch --import &>/dev/null
-        #gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
-        #cd $gitfolder
-        #for p in $(find $PWD -maxdepth 1 -regex '.*\.pkg\.tar\.\(xz\|zst\)'); do
-          #gpg --pinentry-mode loopback --passphrase "${{ inputs.gpg-passphrase }}" --detach-sign ${p}
-        #done
+    - name: Rename Package
+      shell: bash -O extglob {0}
+      run: | 
+        # "Rename Package"
+        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
+        cd $gitfolder
+        for i in *.zst; do if [ -n "$(ls $i | grep :)" ]; then mv $i $(echo $i | sed 's/:/-/'); fi; done
+        
+        
+    - name: sign package
+      shell: bash -O extglob {0}
+      run: |
+        # "Assinar Pacote"
+        cat <(echo -e "${{ inputs.gpg-key }}") | gpg --batch --import &>/dev/null
+        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
+        cd $gitfolder
+        for p in $(find $PWD -maxdepth 1 -regex '.*\.pkg\.tar\.\(xz\|zst\)'); do
+          gpg --pinentry-mode loopback --passphrase "${{ inputs.gpg-passphrase }}" --detach-sign ${p}
+        done
         
     ## Tmate ##
     #- name: Setup tmate session
     #  uses: mxschmitt/action-tmate@v3
     
-    #- name: CheckSum
-      #shell: bash -O extglob {0}
-      #run: |
-        #echo "Checksum"
-        #gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
-        #cd $gitfolder
-        #echo '#!/bin/bash
-        ##file=$(find -type f -iname "*.zst" | cut -d "/" -f2)
-        ##for i in *.zst *.sig; do test -e $i && md5sum $i >> "$file.md5"; done
-        #for i in $(ls *.zst); do md5sum $i >> $i.md5; done
-        #for i in $(ls *.sig | sed 's/.sig//'); do md5sum $i.sig >> $i.md5; done
-        #exit 0' > md5.sh
-        #bash md5.sh
+    - name: CheckSum
+      shell: bash -O extglob {0}
+      run: |
+        # "Checksum"
+        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
+        cd $gitfolder
+        echo '#!/bin/bash
+        #file=$(find -type f -iname "*.zst" | cut -d "/" -f2)
+        #for i in *.zst *.sig; do test -e $i && md5sum $i >> "$file.md5"; done
+        for i in $(ls *.zst); do md5sum $i >> $i.md5; done
+        for i in $(ls *.sig | sed 's/.sig//'); do md5sum $i.sig >> $i.md5; done
+        exit 0' > md5.sh
+        bash md5.sh
    
    
        

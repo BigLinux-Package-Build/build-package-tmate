@@ -102,6 +102,11 @@ runs:
         [biglinux-stable]
         SigLevel = PackageRequired
         Server = https://repo.biglinux.com.br/stable/$arch' | sudo tee -a /etc/pacman.conf
+        
+        echo '
+        [biglinux-testing]
+        SigLevel = PackageRequired
+        Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/pacman.conf
     
     - name: install keyrings
       shell: bash
@@ -122,11 +127,26 @@ runs:
           sudo install -m0644 archlinux-trusted /usr/share/pacman/keyrings/
           sudo install -m0644 archlinux-revoked /usr/share/pacman/keyrings/
         popd
+        sudo git clone --depth 1 https://github.com/biglinux/biglinux-keyring.git
+        pushd biglinux-keyring
+          sudo install -m0644 biglinux.gpg /usr/share/pacman/keyrings/
+          sudo install -m0644 biglinux-trusted /usr/share/pacman/keyrings/
+          sudo install -m0644 biglinux-trusted /usr/share/pacman/keyrings/
+        popd
+        
         sudo rm -rf archlinux-keyring
-        sudo pacman-key --init
-        sudo pacman-key -r 45EC44879815E2A6
-        sudo pacman-key --lsign-key 45EC44879815E2A6
-        sudo pacman-key --populate archlinux manjaro
+        #sudo pacman-key --init
+        #sudo pacman-key -r 45EC44879815E2A6
+        #sudo pacman-key --lsign-key 45EC44879815E2A6
+        #sudo pacman-key --populate archlinux manjaro
+        
+    - name: install manjaro-chrootbuild
+      shell: bash
+      run: |
+        sudo git clone https://github.com/xivastudio/key.git
+        sudo cp -r key/* /etc/pacman.d/gnupg/
+        
+        
         
     - name: install manjaro-chrootbuild
       shell: bash
@@ -145,32 +165,33 @@ runs:
         sudo sed -i '/\[core\]/{h;s/.*/SigLevel = PackageRequired/;p;x;}' /etc/chrootbuild/pacman.conf.x86_64
         sudo sed -i '/\[core\]/{h;s/.*/Server = https:\/\/repo.biglinux.com.br\/update-stable\/$arch/;p;x;}' /etc/chrootbuild/pacman.conf.x86_64
         sudo sed -i '/\[core\]/{h;s/.*//;p;x;}' /etc/chrootbuild/pacman.conf.x86_64
+        
+        #if [ "$EXTRAREPO" = "testing" ]; then
+        echo '
+        [biglinux-testing]
+        SigLevel = PackageRequired
+        Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
+        #fi
+        
         echo '
         [biglinux-stable]
         SigLevel = PackageRequired
         Server = https://repo.biglinux.com.br/stable/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
         
-        if [ "$EXTRAREPO" = "testing" ]; then
-        echo '
-        [biglinux-testing]
-        SigLevel = PackageRequired
-        Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /etc/chrootbuild/pacman.conf.x86_64
-        fi
-        
         sudo sed -i '/-Syy/s/-Syy/-Syy git /' /usr/lib/manjaro-chrootbuild/util-chroot.sh
         
-    - name: Telegram Alert End
-      shell: bash
-      run: |
-          curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "${{ inputs.chat_id }}", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/'$GITHUB_REPOSITORY'/actions/runs/'$GITHUB_RUN_ID'", "disable_notification": false}' ${{ inputs.msg_bot_key }}
+    #- name: Telegram Alert End
+      #shell: bash
+      #run: |
+          #curl -X POST -H 'Content-Type: application/json' -d '{"chat_id": "${{ inputs.chat_id }}", "text": "Tmate do Build-Package-Tmate iniciado em: https://github.com/'$GITHUB_REPOSITORY'/actions/runs/'$GITHUB_RUN_ID'", "disable_notification": false}' ${{ inputs.msg_bot_key }}
         
     # Tmate ##
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
         
-    - name: build package
-      shell: bash
-      run: |
+    #- name: build package
+      #shell: bash
+      #run: |
         # "build package"
         #git clone ${{ github.event.client_payload.url }}.git
         
@@ -194,20 +215,21 @@ runs:
       shell: bash -O extglob {0}
       run: | 
         # "Rename Package"
-        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
-        cd $gitfolder
+        for i in $(find -type f -name PKGBUILD | sed 's/PKGBUILD//'); do
+        cd $i
         for i in *.zst; do if [ -n "$(ls $i | grep :)" ]; then mv $i $(echo $i | sed 's/:/-/'); fi; done
-        
+        done
         
     - name: sign package
       shell: bash -O extglob {0}
       run: |
         # "Assinar Pacote"
         cat <(echo -e "${{ inputs.gpg-key }}") | gpg --batch --import &>/dev/null
-        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
-        cd $gitfolder
+        for i in $(find -type f -name PKGBUILD | sed 's/PKGBUILD//'); do
+        cd $i
         for p in $(find $PWD -maxdepth 1 -regex '.*\.pkg\.tar\.\(xz\|zst\)'); do
           gpg --pinentry-mode loopback --passphrase "${{ inputs.gpg-passphrase }}" --detach-sign ${p}
+        done
         done
         
     ## Tmate ##
@@ -218,8 +240,8 @@ runs:
       shell: bash -O extglob {0}
       run: |
         # "Checksum"
-        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
-        cd $gitfolder
+        for i in $(find -type f -name PKGBUILD | sed 's/PKGBUILD//'); do
+        cd $i
         echo '#!/bin/bash
         #file=$(find -type f -iname "*.zst" | cut -d "/" -f2)
         #for i in *.zst *.sig; do test -e $i && md5sum $i >> "$file.md5"; done
@@ -227,6 +249,7 @@ runs:
         for i in $(ls *.sig | sed 's/.sig//'); do md5sum $i.sig >> $i.md5; done
         exit 0' > md5.sh
         bash md5.sh
+        done
        
     #- name: prepare assets transaction
       #shell: bash -O extglob {0}

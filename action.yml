@@ -140,11 +140,11 @@ runs:
         #sudo pacman-key --lsign-key 45EC44879815E2A6
         #sudo pacman-key --populate archlinux manjaro
         
-    - name: install manjaro-chrootbuild
-      shell: bash
-      run: |
-        sudo git clone https://github.com/xivastudio/key.git
-        sudo cp -r key/* /etc/pacman.d/gnupg/
+    #- name: install manjaro-chrootbuild
+      #shell: bash
+      #run: |
+        #sudo git clone https://github.com/xivastudio/key.git
+        #sudo cp -r key/* /etc/pacman.d/gnupg/
         
         
         
